@@ -1,0 +1,23 @@
+.{
+    .name = "r-build-zig",
+    .version = "0.1.0",
+    .minimum_zig_version = "0.14.0",
+    .dependencies = .{
+        .mos = .{
+            .url = "https://codeberg.org/mocompute/mos/archive/main.tar.gz",
+            .hash = "1220b6da547644c2792c9490e3a813978c90b6aae8519b056a13ba40af1968cff8e7",
+        },
+        .@"r-repo-parse" = .{
+            .url = "https://codeberg.org/mocompute/r-repo-parse/archive/v0.1.0.tar.gz",
+            .hash = "1220f3205801187e2f9de730abcc08b8df92611262640f80e592bd3f2efb8f8d4ca2",
+        },
+    },
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "LICENSE",
+        "README.md",
+    },
+}
