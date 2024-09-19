@@ -26,7 +26,7 @@
         },
         .@"r-repo-parse" = .{
             .url = "https://codeberg.org/mocompute/r-repo-parse/archive/v0.1.0.tar.gz",
-            .hash = "1220f3205801187e2f9de730abcc08b8df92611262640f80e592bd3f2efb8f8d4ca2",
+            .hash = "12205e4a4ee798ff4c614473b896f7714a74f496ffe3194c826a1f7f62fdbab2c54f",
         },
     },
 

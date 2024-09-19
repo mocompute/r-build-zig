@@ -47,6 +47,7 @@ const NUM_ARGS_MIN = 2;
 /// Requires thread-safe allocator.
 fn readRepositories(alloc: Allocator, repos: []Config.Repo, out_dir: []const u8) !Repository {
     var repository = try Repository.init(alloc);
+    errdefer repository.deinit();
 
     var urls = try std.ArrayList([]const u8).initCapacity(alloc, repos.len);
     defer {
@@ -110,6 +111,7 @@ fn readRepositories(alloc: Allocator, repos: []Config.Repo, out_dir: []const u8)
 
 fn readPackageDirs(alloc: Allocator, dirs: []const []const u8) !Repository {
     var repo = try Repository.init(alloc);
+    errdefer repo.deinit();
 
     var i: usize = 0;
     while (i < dirs.len) : (i += 1) {
@@ -567,6 +569,7 @@ fn writeOnePackage(
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
     defer _ = gpa.deinit();
+
     var arena = std.heap.ArenaAllocator.init(gpa.allocator());
     defer arena.deinit();
     var tsa = std.heap.ThreadSafeAllocator{ .child_allocator = arena.allocator() };
