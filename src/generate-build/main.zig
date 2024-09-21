@@ -407,6 +407,7 @@ fn writeAssets(alloc: Allocator, path: []const u8, assets: Assets) !void {
 fn writeBuildRules(
     alloc: Allocator,
     out_path: []const u8,
+    config_path: []const u8,
     merged: []NAVC,
     packages: Repository,
     cloud: Repository,
@@ -446,7 +447,7 @@ fn writeBuildRules(
                 .{ p.name, p.version_string },
             );
 
-            try writeOnePackage(writer, p, tarball, false);
+            try writeOnePackage(writer, p, tarball, config_path, false);
         }
     }
     {
@@ -454,7 +455,7 @@ fn writeBuildRules(
         for (ordered) |p| {
             if (try findDirectory(alloc, p.name, package_dirs)) |dir| {
                 defer alloc.free(dir);
-                try writeOnePackage(writer, p, dir, true);
+                try writeOnePackage(writer, p, dir, config_path, true);
             } else {
                 std.debug.print("WARNING: failed to find directory for {s}\n", .{p.name});
             }
@@ -469,6 +470,7 @@ fn writeOnePackage(
     writer: anytype,
     p: Repository.Package,
     dir: []const u8,
+    config_path: []const u8,
     is_dir: bool,
 ) !void {
     try std.fmt.format(writer,
@@ -487,7 +489,7 @@ fn writeOnePackage(
         \\
     , .{p.name});
     try std.fmt.format(writer,
-        \\ _ = @"{s}".addDirectoryArg(libdir.getDirectory());
+        \\_ = @"{s}".addDirectoryArg(libdir.getDirectory());
         \\
     , .{p.name});
 
@@ -503,11 +505,12 @@ fn writeOnePackage(
         try std.fmt.format(writer,
             \\_ = @"{s}".addFileArg(asset_dir.path(b, "{s}"));
             \\@"{s}".step.name = "{s}";
+            \\@"{s}".addFileInput(b.path("{s}"));
             \\
-        , .{ p.name, dir, p.name, p.name });
+        , .{ p.name, dir, p.name, p.name, p.name, config_path });
     }
 
-    // capture stdout, which will help zig build cache the build
+    // capture stdout
     try std.fmt.format(writer,
         \\const @"{s}_out" = @"{s}".captureStdOut();
         \\
@@ -620,6 +623,7 @@ pub fn main() !void {
     try writeBuildRules(
         alloc,
         generated,
+        config_path,
         merged,
         packages,
         cloud,
