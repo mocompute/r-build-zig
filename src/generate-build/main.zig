@@ -325,6 +325,7 @@ fn checkAndCreateAssets(
             return std.mem.order(u8, ctx.keys[a_index], ctx.keys[b_index]) == .lt;
         }
     }; // TODO: move this to a util lib somewhere
+
     assets.map.sort(C{ .keys = assets.map.keys() });
     return assets;
 }
@@ -382,14 +383,13 @@ fn updateAssetEntry(
         }
     }
 
+    std.debug.print("Adding asset: {s}: {s}\n", .{ name, url });
     assets.map.put(alloc, name, .{ .url = url }) catch @panic("OOM");
 }
 
 fn writeAssets(alloc: Allocator, path: []const u8, assets: Assets) !void {
-    const config_root = try config_json.readConfigRoot(alloc, path, .{});
-    var config = config_root.@"generate-build";
-
-    config.assets = assets;
+    var config_root = try config_json.readConfigRoot(alloc, path, .{});
+    config_root.@"generate-build".assets = assets;
 
     const bak = try std.fmt.allocPrint(alloc, "{s}.__bak__", .{path});
     std.fs.cwd().deleteFile(bak) catch {};
