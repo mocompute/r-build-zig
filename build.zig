@@ -58,7 +58,6 @@ fn build_generate_build(
     }).module("r-repo-parse");
 
     exe.root_module.addImport("r-repo-parse", r_repo_parse);
-
     return exe;
 }
 
@@ -83,51 +82,4 @@ pub fn build(b: *Build) !void {
     b.getInstallStep().dependOn(&generate_build.step);
 
     // -- end tools ----------------------------------------------------------
-
-    // -- begin check --------------------------------------------------------
-    // const exe_check = b.addExecutable(.{
-    //     .name = "r_repo_parse",
-    //     .root_source_file = b.path("src/main.zig"),
-    //     .target = target,
-    //     .optimize = optimize,
-    // });
-    // exe_check.root_module.addImport("mos", mos);
-    // exe_check.root_module.addImport("cmdline", cmdline);
-    // exe_check.root_module.addImport("common", common);
-
-    // const check = b.step("check", "Check if r_repo_parse compiles");
-    // check.dependOn(&exe_check.step);
-    // check.dependOn(&fetch_assets.step);
-    // -- end check ----------------------------------------------------------
-
-    // -- begin test ---------------------------------------------------------
-    // const lib_unit_tests = b.addTest(.{
-    //     .root_source_file = b.path("src/lib/root.zig"),
-    //     .target = target,
-    //     .optimize = optimize,
-    // });
-    // lib_unit_tests.root_module.addImport("common", common);
-    // lib_unit_tests.root_module.addImport("mos", mos);
-    // lib_unit_tests.linkLibC();
-
-    // const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);
-
-    // const exe_unit_tests = b.addTest(.{
-    //     .root_source_file = b.path("src/main.zig"),
-    //     .target = target,
-    //     .optimize = optimize,
-    // });
-    // exe_unit_tests.root_module.addImport("common", common);
-    // exe_unit_tests.root_module.addImport("mos", mos);
-
-    // const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
-
-    // // Similar to creating the run step earlier, this exposes a `test` step to
-    // // the `zig build --help` menu, providing a way for the user to request
-    // // running the unit tests.
-    // const test_step = b.step("test", "Run unit tests");
-    // test_step.dependOn(&run_lib_unit_tests.step);
-    // test_step.dependOn(&run_exe_unit_tests.step);
-    // -- end test -----------------------------------------------------------
-
 }
