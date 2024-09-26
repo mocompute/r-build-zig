@@ -346,10 +346,15 @@ fn checkAndAddOnePackage(
         const ver = slice.items(.version_string)[found];
         const url1 = std.fmt.allocPrint(
             alloc,
-            "{s}/src/contrib/{s}_{s}.tar.gz",
+            "{s}/package={s}&version={s}",
             .{ repo, name, ver },
         ) catch @panic("OOM");
         const url2 = std.fmt.allocPrint(
+            alloc,
+            "{s}/src/contrib/{s}_{s}.tar.gz",
+            .{ repo, name, ver },
+        ) catch @panic("OOM");
+        const url3 = std.fmt.allocPrint(
             alloc,
             "{s}/src/contrib/Archive/{s}_{s}.tar.gz",
             .{ repo, name, ver },
@@ -363,8 +368,12 @@ fn checkAndAddOnePackage(
             lock.lock();
             defer lock.unlock();
             updateAssetEntry(alloc, package.name, url2, assets, assets_orig);
+        } else if (download.headOk(alloc, url3) catch false) {
+            lock.lock();
+            defer lock.unlock();
+            updateAssetEntry(alloc, package.name, url3, assets, assets_orig);
         } else {
-            fatal("ERROR: NOT FOUND: {s}\nNOT FOUND: {s}\n", .{ url1, url2 });
+            fatal("ERROR: NOT FOUND: {s}\nERROR: NOT FOUND: {s}\nERROR: NOT FOUND: {s}", .{ url1, url2, url3 });
         }
     }
 }
@@ -389,7 +398,14 @@ fn updateAssetEntry(
 
 fn writeAssets(alloc: Allocator, path: []const u8, assets: Assets) !void {
     var config_root = try config_json.readConfigRoot(alloc, path, .{});
-    config_root.@"generate-build".assets = assets;
+
+    // merge and clobber existing assets dict
+    {
+        var it = assets.map.iterator();
+        while (it.next()) |e| {
+            try config_root.@"generate-build".assets.map.put(alloc, e.key_ptr.*, e.value_ptr.*);
+        }
+    }
 
     const bak = try std.fmt.allocPrint(alloc, "{s}.__bak__", .{path});
     std.fs.cwd().deleteFile(bak) catch {};

@@ -42,6 +42,7 @@ fn hashOne(
     file_path: []const u8,
     config_path: []const u8,
     config_mutex: *Mutex,
+    hashes_updated: *usize,
 ) void {
     const hash = blk: {
         const file = std.fs.cwd().openFile(file_path, .{}) catch |err| {
@@ -113,6 +114,9 @@ fn hashOne(
 
         // print warning
         std.debug.print("WARNING: wrote new hash for asset '{s}'\n", .{asset_name});
+
+        // update count (protected by mutex)
+        hashes_updated.* += 1;
     }
 }
 
@@ -122,6 +126,7 @@ fn downloadOne(
     out_dir: []const u8,
     config_path: []const u8,
     mutex: *Mutex,
+    hashes_updated: *usize,
 ) void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
     defer _ = gpa.deinit();
@@ -129,7 +134,10 @@ fn downloadOne(
     var arena = std.heap.ArenaAllocator.init(alloc);
     defer arena.deinit();
 
-    const basename = std.fs.path.basenamePosix(asset.url);
+    const basename = tarballName(arena.allocator(), asset.url) catch |err| {
+        fatal("ERROR: unable to determine tarball name from '{s}': {s}\n", .{ asset.url, @errorName(err) });
+    };
+
     const out_path = std.fs.path.join(arena.allocator(), &.{ out_dir, basename }) catch |err| {
         fatal("ERROR: unable to join paths '{s}' and '{s}': {s}\n", .{
             out_dir,
@@ -149,7 +157,45 @@ fn downloadOne(
         out_path,
         config_path,
         mutex,
+        hashes_updated,
     );
+}
+
+fn tarballName(alloc: Allocator, url: []const u8) ![]const u8 {
+    const basename = std.fs.path.basenamePosix(url);
+    if (std.mem.startsWith(u8, basename, "package=")) {
+        // package=foo?version=1.2.3-4
+
+        var it = std.mem.tokenizeAny(u8, basename, "=&");
+        const State = enum {
+            expect_package,
+            expect_name,
+            expect_version,
+            expect_number,
+        };
+
+        var name: []const u8 = undefined;
+        var state: State = .expect_package;
+        while (it.next()) |s| {
+            switch (state) {
+                .expect_package => state = .expect_name,
+                .expect_version => state = .expect_number,
+                .expect_name => {
+                    name = s;
+                    state = .expect_version;
+                },
+                .expect_number => {
+                    return try std.fmt.allocPrint(
+                        alloc,
+                        "{s}_{s}.tar.gz",
+                        .{ name, s },
+                    );
+                },
+            }
+        }
+        return error.ParseError;
+    }
+    return basename;
 }
 
 pub fn main() !void {
@@ -173,6 +219,7 @@ pub fn main() !void {
     var pool: std.Thread.Pool = undefined;
     try std.Thread.Pool.init(&pool, .{ .allocator = alloc });
     defer pool.deinit();
+    var hashes_updated: usize = 0;
     var config_file_lock = std.Thread.Mutex{};
     var wg = std.Thread.WaitGroup{};
 
@@ -181,12 +228,15 @@ pub fn main() !void {
             pool.spawnWg(
                 &wg,
                 &downloadOne,
-                .{ name, asset, out_dir_path, config_path, &config_file_lock },
+                .{ name, asset, out_dir_path, config_path, &config_file_lock, &hashes_updated },
             );
         }
     }
 
     pool.waitAndWork(&wg);
+
+    // if any hashes were updated, exit 1
+    if (hashes_updated > 0) std.process.exit(1);
 }
 
 fn fatal(comptime format: []const u8, args: anytype) noreturn {

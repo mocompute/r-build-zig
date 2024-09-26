@@ -25,8 +25,8 @@
             .hash = "1220b6da547644c2792c9490e3a813978c90b6aae8519b056a13ba40af1968cff8e7",
         },
         .@"r-repo-parse" = .{
-            .url = "https://codeberg.org/mocompute/r-repo-parse/archive/v0.1.0.tar.gz",
-            .hash = "12205e4a4ee798ff4c614473b896f7714a74f496ffe3194c826a1f7f62fdbab2c54f",
+            .url = "https://codeberg.org/mocompute/r-repo-parse/archive/v0.2.0.tar.gz",
+            .hash = "1220ab79b57a73d34b16b2264a3f3326e24b02966e4eefd7ef3961b3f4256d285949",
         },
     },
 
