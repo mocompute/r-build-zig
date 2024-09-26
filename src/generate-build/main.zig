@@ -44,40 +44,35 @@ fn usage() noreturn {
 }
 const NUM_ARGS_MIN = 2;
 
-/// Requires thread-safe allocator.
+/// Requires thread-safe allocator. Will leak memory in case of errors.
 fn readRepositories(alloc: Allocator, repos: []Config.Repo, out_dir: []const u8) !Repository {
     var repository = try Repository.init(alloc);
-    errdefer repository.deinit();
 
-    var urls = try std.ArrayList([]const u8).initCapacity(alloc, repos.len);
-    defer {
-        for (urls.items) |x| alloc.free(x);
-        urls.deinit();
-    }
-    var paths = try std.ArrayList([]const u8).initCapacity(alloc, repos.len);
-    defer {
-        for (paths.items) |x| alloc.free(x);
-        paths.deinit();
-    }
+    const download_options = blk: {
+        var urls = try std.ArrayList([]const u8).initCapacity(alloc, repos.len);
+        var paths = try std.ArrayList([]const u8).initCapacity(alloc, repos.len);
 
-    for (repos) |repo| {
-        const url = try std.fmt.allocPrint(alloc, "{s}/src/contrib/PACKAGES.gz", .{repo.url});
-        const path = try std.fs.path.join(alloc, &.{ out_dir, repo.name, "PACKAGES.gz" });
-        if (std.fs.path.dirname(path)) |dir| try std.fs.cwd().makePath(dir);
-        urls.appendAssumeCapacity(url);
-        paths.appendAssumeCapacity(path);
-    }
+        for (repos) |repo| {
+            const url = try std.fmt.allocPrint(alloc, "{s}/src/contrib/PACKAGES.gz", .{repo.url});
+            const path = try std.fs.path.join(alloc, &.{ out_dir, repo.name, "PACKAGES.gz" });
+            if (std.fs.path.dirname(path)) |dir| try std.fs.cwd().makePath(dir);
+            urls.appendAssumeCapacity(url);
+            paths.appendAssumeCapacity(path);
+        }
 
-    const options = download.DownloadOptions{
-        .url = try urls.toOwnedSlice(),
-        .path = try paths.toOwnedSlice(),
+        const urls_s = try urls.toOwnedSlice();
+        const paths_s = try paths.toOwnedSlice();
+        break :blk download.DownloadOptions{
+            .url = urls_s,
+            .path = paths_s,
+        };
     };
     defer {
-        alloc.free(options.url);
-        alloc.free(options.path);
+        alloc.free(download_options.url);
+        alloc.free(download_options.path);
     }
 
-    const statuses = try download.downloadFiles(alloc, options);
+    const statuses = try download.downloadFiles(alloc, download_options);
     defer alloc.free(statuses);
 
     var index: usize = 0;
@@ -86,7 +81,10 @@ fn readRepositories(alloc: Allocator, repos: []Config.Repo, out_dir: []const u8)
         switch (statuses[index]) {
             .ok => continue,
             .err => |e| {
-                std.debug.print("ERROR: downloading '{s}': {s}\n", .{ options.url[index], e });
+                std.debug.print("ERROR: downloading '{s}': {s}\n", .{
+                    download_options.url[index],
+                    e,
+                });
                 errorp = true;
             },
         }
@@ -97,8 +95,8 @@ fn readRepositories(alloc: Allocator, repos: []Config.Repo, out_dir: []const u8)
     defer buf.deinit();
 
     index = 0;
-    while (index < options.path.len) : (index += 1) {
-        const file = try std.fs.cwd().openFile(options.path[index], .{});
+    while (index < download_options.path.len) : (index += 1) {
+        const file = try std.fs.cwd().openFile(download_options.path[index], .{});
         defer file.close();
         try std.compress.gzip.decompress(file.reader(), buf.writer());
 
@@ -160,6 +158,8 @@ fn readPackagesIntoRepository(alloc: Allocator, repository: *Repository, dir: st
     }
 }
 
+/// Walk through all roots recursively looking for a directory called
+/// name. Caller owns returned slice memory.
 fn findDirectory(alloc: Allocator, name: []const u8, roots: []const []const u8) !?[]const u8 {
     for (roots) |root| {
         if (std.mem.eql(u8, name, std.fs.path.basename(root)))
@@ -209,6 +209,7 @@ fn findTarball(
     return null;
 }
 
+/// Caller owns returned slice memory.
 fn calculateDependencies(alloc: Allocator, packages: Repository, cloud: Repository) ![]NAVC {
     // collect external dependencies
     var deps = try getDirectDependencies(alloc, packages);
@@ -230,7 +231,7 @@ fn calculateDependencies(alloc: Allocator, packages: Repository, cloud: Reposito
     for (temp_keys) |navc| {
         const trans = cloud.transitiveDependenciesNoBase(alloc, navc) catch |err| switch (err) {
             error.NotFound => {
-                std.debug.print("skipping {s}: could not finish transitive dependencies.\n", .{navc.name});
+                std.debug.print("skipping {s}: could not find transitive dependencies.\n", .{navc.name});
                 continue;
             },
             error.OutOfMemory => {
@@ -300,7 +301,6 @@ fn checkAndCreateAssets(
     cloud_index: Repository.Index,
     assets_orig: Assets,
 ) !Assets {
-
     // find the source
     var assets = Assets{};
     var lock = std.Thread.Mutex{};
