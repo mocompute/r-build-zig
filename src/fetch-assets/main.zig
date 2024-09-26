@@ -202,17 +202,18 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
     defer _ = gpa.deinit();
     const alloc = gpa.allocator();
-    var arena = std.heap.ArenaAllocator.init(alloc);
-    defer arena.deinit();
+    var arena_state = std.heap.ArenaAllocator.init(alloc);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
 
-    const args = try std.process.argsAlloc(arena.allocator());
-    defer std.process.argsFree(arena.allocator(), args);
+    const args = try std.process.argsAlloc(arena);
+    defer std.process.argsFree(arena, args);
 
     if (args.len != NUM_ARGS + 1) usage();
     const config_path = args[1];
     const out_dir_path = args[2];
 
-    const config_root = try config_json.readConfigRoot(arena.allocator(), config_path, .{});
+    const config_root = try config_json.readConfigRoot(arena, config_path, .{});
     const config = config_root.@"generate-build";
     const assets = config.assets;
 
