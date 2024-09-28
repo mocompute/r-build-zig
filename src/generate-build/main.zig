@@ -25,8 +25,8 @@ const NAVC = r_repo_parse.version.NameAndVersionConstraint;
 const NAVCHashMap = r_repo_parse.version.NameAndVersionConstraintHashMap;
 const NAVCHashMapSortContext = r_repo_parse.version.NameAndVersionConstraintSortContext;
 const Repository = r_repo_parse.repository.Repository;
-const isBasePackage = r_repo_parse.repository.isBasePackage;
-const isRecommendedPackage = r_repo_parse.repository.isRecommendedPackage;
+const isBasePackage = Repository.Tools.isBasePackage;
+const isRecommendedPackage = Repository.Tools.isRecommendedPackage;
 
 const common = @import("r-repo-parse").common;
 const config_json = common.config_json;
@@ -339,7 +339,7 @@ fn checkAndAddOnePackage(
     assets_orig: Assets,
     lock: *Mutex,
 ) void {
-    if (index.findPackage(package)) |found| {
+    if (Repository.Tools.matchPackage(index, package)) |found| {
         const slice = cloud.packages.slice();
         const name = slice.items(.name)[found];
         const repo = slice.items(.repository)[found];
@@ -447,7 +447,7 @@ fn writeBuildRules(
     var merged_packages = try std.ArrayList(Repository.Package).initCapacity(alloc, merged.len);
     defer merged_packages.deinit();
     for (merged) |navc| {
-        if (cloud_index.findPackage(navc)) |idx| {
+        if (Repository.Tools.matchPackage(cloud_index, navc)) |idx| {
             merged_packages.appendAssumeCapacity(cloud.packages.get(idx));
         } else unreachable;
     }
@@ -612,7 +612,7 @@ pub fn main() !void {
     const cloud = readRepositories(alloc, repos, out_dir_path) catch |err| {
         fatal("ERROR: failed to download/read repositories: {s}\n", .{@errorName(err)});
     };
-    const cloud_index = cloud.createIndex() catch |err| {
+    const cloud_index = Repository.Index.init(cloud) catch |err| {
         fatal("ERROR: failed to create repository index: {s}\n", .{@errorName(err)});
     };
 
