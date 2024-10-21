@@ -17,16 +17,16 @@
 
 .{
     .name = "r-build-zig",
-    .version = "0.3.0",
+    .version = "0.3.1",
     .minimum_zig_version = "0.14.0",
     .dependencies = .{
         .mos = .{
-            .url = "https://codeberg.org/mocompute/mos/archive/main.tar.gz",
-            .hash = "1220b6da547644c2792c9490e3a813978c90b6aae8519b056a13ba40af1968cff8e7",
+            .url = "https://github.com/mocompute/mos/archive/refs/tags/v0.1.0.tar.gz",
+            .hash = "12205df0b3cb159faf3b377f19f33ebe5453c2252eede8eae6cbfb2ed008a4cfaa20",
         },
         .@"r-repo-parse" = .{
-            .url = "https://codeberg.org/mocompute/r-repo-parse/archive/v0.3.0.tar.gz",
-            .hash = "1220221d15075f433847054805346f1f2abce77385dd694ef4af993ae9d2f9ccea07",
+            .url = "https://github.com/mocompute/r-repo-parse/archive/refs/tags/v0.3.3.tar.gz",
+            .hash = "122063ae9ebaa89a90944bc2a2e6f698994f51ed8f0e4b0b1d527d081801687a0373",
         },
     },
 
