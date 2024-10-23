@@ -25,8 +25,6 @@ const NAVC = r_repo_parse.version.NameAndVersionConstraint;
 const NAVCHashMap = r_repo_parse.version.NameAndVersionConstraintHashMap;
 const NAVCHashMapSortContext = r_repo_parse.version.NameAndVersionConstraintSortContext;
 const Repository = r_repo_parse.repository.Repository;
-const isBasePackage = Repository.Tools.isBasePackage;
-const isRecommendedPackage = Repository.Tools.isRecommendedPackage;
 
 const common = @import("r-repo-parse").common;
 const config_json = common.config_json;
@@ -272,22 +270,19 @@ fn getDirectDependencies(alloc: Allocator, packages: Repository) !NAVCHashMap {
     var it = packages.iter();
     while (it.next()) |p| {
         for (p.depends) |navc| {
-            if (isBasePackage(navc.name)) continue;
-            if (isRecommendedPackage(navc.name)) continue;
+            if (isBaseOrRecommended(navc.name)) continue;
             if (try packages.findLatestPackage(alloc, navc) == null) {
                 try deps.put(navc, true);
             }
         }
         for (p.imports) |navc| {
-            if (isBasePackage(navc.name)) continue;
-            if (isRecommendedPackage(navc.name)) continue;
+            if (isBaseOrRecommended(navc.name)) continue;
             if (try packages.findLatestPackage(alloc, navc) == null) {
                 try deps.put(navc, true);
             }
         }
         for (p.linkingTo) |navc| {
-            if (isBasePackage(navc.name)) continue;
-            if (isRecommendedPackage(navc.name)) continue;
+            if (isBaseOrRecommended(navc.name)) continue;
             if (try packages.findLatestPackage(alloc, navc) == null) {
                 try deps.put(navc, true);
             }
@@ -342,22 +337,24 @@ fn checkAndAddOnePackage(
     assets_orig: Assets,
     lock: *Mutex,
 ) void {
+    const allocPrint = std.fmt.allocPrint;
+
     if (Repository.Tools.matchPackage(index, package)) |found| {
         const slice = cloud.packages.slice();
         const name = slice.items(.name)[found];
         const repo = slice.items(.repository)[found];
         const ver = slice.items(.version_string)[found];
-        const url1 = std.fmt.allocPrint(
+        const url1 = allocPrint(
             alloc,
             "{s}/package={s}&version={s}",
             .{ repo, name, ver },
         ) catch @panic("OOM");
-        const url2 = std.fmt.allocPrint(
+        const url2 = allocPrint(
             alloc,
             "{s}/src/contrib/{s}_{s}.tar.gz",
             .{ repo, name, ver },
         ) catch @panic("OOM");
-        const url3 = std.fmt.allocPrint(
+        const url3 = allocPrint(
             alloc,
             "{s}/src/contrib/Archive/{s}_{s}.tar.gz",
             .{ repo, name, ver },
@@ -492,12 +489,14 @@ fn writeOnePackage(
     config_path: []const u8,
     is_dir: bool,
 ) !void {
-    try std.fmt.format(writer,
+    const format = std.fmt.format;
+
+    try format(writer,
         \\
         \\const @"{s}" = b.addSystemCommand(&.{{ "R" }});
         \\
     , .{p.name});
-    try std.fmt.format(writer,
+    try format(writer,
         \\@"{s}".addArgs(&.{{
         \\    "CMD",
         \\    "INSTALL",
@@ -507,13 +506,13 @@ fn writeOnePackage(
         \\}});
         \\
     , .{p.name});
-    try std.fmt.format(writer,
+    try format(writer,
         \\_ = @"{s}".addDirectoryArg(libdir.getDirectory());
         \\
     , .{p.name});
 
     if (is_dir) {
-        try std.fmt.format(writer,
+        try format(writer,
             \\const @"{s}_src" = b.addWriteFiles();
             \\_ = @"{s}_src".addCopyDirectory(b.path("{s}"), "", .{{}});
             \\_ = @"{s}".addDirectoryArg(@"{s}_src".getDirectory());
@@ -521,7 +520,7 @@ fn writeOnePackage(
             \\
         , .{ p.name, p.name, dir, p.name, p.name, p.name, p.name });
     } else {
-        try std.fmt.format(writer,
+        try format(writer,
             \\_ = @"{s}".addFileArg(asset_dir.path(b, "{s}"));
             \\@"{s}".step.name = "{s}";
             \\@"{s}".addFileInput(b.path("{s}"));
@@ -530,43 +529,40 @@ fn writeOnePackage(
     }
 
     // capture stdout
-    try std.fmt.format(writer,
+    try format(writer,
         \\const @"{s}_out" = @"{s}".captureStdOut();
         \\
     , .{ p.name, p.name });
 
     // capture stderr and discard it
-    try std.fmt.format(writer,
+    try format(writer,
         \\_ = @"{s}".captureStdErr();
         \\
     , .{p.name});
 
     for (p.depends) |navc| {
-        if (isBasePackage(navc.name)) continue;
-        if (isRecommendedPackage(navc.name)) continue;
-        try std.fmt.format(writer,
+        if (isBaseOrRecommended(navc.name)) continue;
+        try format(writer,
             \\@"{s}".step.dependOn(&@"{s}".step);
             \\
         , .{ p.name, navc.name });
     }
     for (p.imports) |navc| {
-        if (isBasePackage(navc.name)) continue;
-        if (isRecommendedPackage(navc.name)) continue;
-        try std.fmt.format(writer,
+        if (isBaseOrRecommended(navc.name)) continue;
+        try format(writer,
             \\@"{s}".step.dependOn(&@"{s}".step);
             \\
         , .{ p.name, navc.name });
     }
     for (p.linkingTo) |navc| {
-        if (isBasePackage(navc.name)) continue;
-        if (isRecommendedPackage(navc.name)) continue;
-        try std.fmt.format(writer,
+        if (isBaseOrRecommended(navc.name)) continue;
+        try format(writer,
             \\@"{s}".step.dependOn(&@"{s}".step);
             \\
         , .{ p.name, navc.name });
     }
 
-    try std.fmt.format(writer,
+    try format(writer,
         \\ const @"{s}_install" = b.addInstallDirectory(.{{
         \\.source_dir = libdir.getDirectory().path(b, "{s}"),
         \\.install_dir = .{{ .custom = "lib" }},
@@ -577,12 +573,12 @@ fn writeOnePackage(
         \\
     , .{ p.name, p.name, p.name, p.name, p.name });
 
-    try std.fmt.format(writer,
+    try format(writer,
         \\b.getInstallStep().dependOn(&@"{s}_install".step);
         \\
     , .{p.name});
 
-    try std.fmt.format(writer,
+    try format(writer,
         \\b.getInstallStep().dependOn(&b.addInstallFileWithDir(@"{s}_out", .{{ .custom = "logs" }}, "{s}.log").step);
         \\
     , .{ p.name, p.name });
@@ -649,6 +645,12 @@ pub fn main() !void {
         cloud_index,
         package_dirs,
     );
+}
+
+fn isBaseOrRecommended(name: []const u8) bool {
+    const isBasePackage = Repository.Tools.isBasePackage;
+    const isRecommendedPackage = Repository.Tools.isRecommendedPackage;
+    return isBasePackage(name) or isRecommendedPackage(name);
 }
 
 fn fatal(comptime format: []const u8, args: anytype) noreturn {
