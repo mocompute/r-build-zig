@@ -79,7 +79,10 @@ fn readRepositories(alloc: Allocator, repos: []Config.Repo, out_dir: []const u8)
     var errorp = false;
     while (index < statuses.len) : (index += 1) {
         switch (statuses[index]) {
-            .ok => continue,
+            .ok => {
+                std.debug.print("Downloaded {s}\n", .{download_options.url[index]});
+                continue;
+            },
             .err => |e| {
                 std.debug.print("ERROR: downloading '{s}': {s}\n", .{
                     download_options.url[index],
