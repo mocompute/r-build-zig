@@ -28,7 +28,7 @@ const Depends = std.StringArrayHashMap(*Module);
 fn build_fetch_assets(b: *Build, target: ResolvedTarget, optimize: OptimizeMode, depends: Depends) *Compile {
     const exe = b.addExecutable(.{
         .name = "fetch-assets",
-        .root_source_file = b.path("src/fetch-assets/main.zig"),
+        .root_source_file = b.path("src/fetch-assets.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -41,7 +41,7 @@ fn build_fetch_assets(b: *Build, target: ResolvedTarget, optimize: OptimizeMode,
 fn build_generate_build(b: *Build, target: ResolvedTarget, optimize: OptimizeMode, depends: Depends) *Compile {
     const exe = b.addExecutable(.{
         .name = "generate-build",
-        .root_source_file = b.path("src/generate-build/main.zig"),
+        .root_source_file = b.path("src/generate-build.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -86,15 +86,16 @@ pub fn build(b: *Build) !void {
 
     // -- begin test ---------------------------------------------------------
     const test_fetch_assets = b.addTest(.{
-        .root_source_file = b.path("src/fetch-assets/main.zig"),
+        .root_source_file = b.path("src/fetch-assets.zig"),
         .target = target,
         .optimize = optimize,
     });
+    test_fetch_assets.root_module.addImport("mos", depends.get("mos").?);
     test_fetch_assets.root_module.addImport("r-repo-parse", depends.get("r-repo-parse").?);
     const run_test_fetch_assets = b.addRunArtifact(test_fetch_assets);
 
     const test_generate_build = b.addTest(.{
-        .root_source_file = b.path("src/generate-build/main.zig"),
+        .root_source_file = b.path("src/generate-build.zig"),
         .target = target,
         .optimize = optimize,
     });

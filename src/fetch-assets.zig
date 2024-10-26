@@ -20,9 +20,9 @@ const Allocator = std.mem.Allocator;
 const Hash = std.crypto.hash.sha2.Sha256;
 const Mutex = std.Thread.Mutex;
 
-const common = @import("r-repo-parse").common;
-const config_json = common.config_json;
-const download = common.download;
+const mos = @import("mos");
+const config_json = @import("config-json.zig");
+const download = mos.download;
 
 const Config = config_json.Config;
 
