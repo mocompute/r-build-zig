@@ -33,6 +33,7 @@ fn build_fetch_assets(b: *Build, target: ResolvedTarget, optimize: OptimizeMode,
         .optimize = optimize,
     });
 
+    exe.root_module.addImport("mos", depends.get("mos").?);
     exe.root_module.addImport("r-repo-parse", depends.get("r-repo-parse").?);
     return exe;
 }
@@ -45,6 +46,7 @@ fn build_generate_build(b: *Build, target: ResolvedTarget, optimize: OptimizeMod
         .optimize = optimize,
     });
 
+    exe.root_module.addImport("mos", depends.get("mos").?);
     exe.root_module.addImport("r-repo-parse", depends.get("r-repo-parse").?);
     return exe;
 }
@@ -62,6 +64,10 @@ pub fn build(b: *Build) !void {
     // -- begin dependencies -------------------------------------------------
     var depends = Depends.init(b.allocator);
     defer depends.deinit();
+    try depends.put("mos", b.dependency("mos", .{
+        .target = target,
+        .optimize = optimize,
+    }).module("mos"));
     try depends.put("r-repo-parse", b.dependency("r-repo-parse", .{
         .target = target,
         .optimize = optimize,
@@ -92,6 +98,7 @@ pub fn build(b: *Build) !void {
         .target = target,
         .optimize = optimize,
     });
+    test_generate_build.root_module.addImport("mos", depends.get("mos").?);
     test_generate_build.root_module.addImport("r-repo-parse", depends.get("r-repo-parse").?);
     const run_test_generate_build = b.addRunArtifact(test_generate_build);
 

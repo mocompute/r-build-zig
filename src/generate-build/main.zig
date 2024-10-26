@@ -26,9 +26,9 @@ const NAVCHashMap = r_repo_parse.version.NameAndVersionConstraintHashMap;
 const NAVCHashMapSortContext = r_repo_parse.version.NameAndVersionConstraintSortContext;
 const Repository = r_repo_parse.repository.Repository;
 
-const common = @import("r-repo-parse").common;
-const config_json = common.config_json;
-const download = common.download;
+const mos = @import("mos");
+const download = mos.download;
+const config_json = @import("config-json.zig");
 
 const ConfigRoot = config_json.ConfigRoot;
 const Config = config_json.Config;
