@@ -513,26 +513,26 @@ fn writeOnePackage(
 
     if (is_dir) {
         try format(writer,
-            \\const @"{s}_src" = b.addWriteFiles();
-            \\_ = @"{s}_src".addCopyDirectory(b.path("{s}"), "", .{{}});
-            \\_ = @"{s}".addDirectoryArg(@"{s}_src".getDirectory());
-            \\@"{s}".step.name = "{s}";
+            \\const @"{0s}_src" = b.addWriteFiles();
+            \\_ = @"{0s}_src".addCopyDirectory(b.path("{1s}"), "", .{{}});
+            \\_ = @"{0s}".addDirectoryArg(@"{0s}_src".getDirectory());
+            \\@"{0s}".step.name = "{0s}";
             \\
-        , .{ p.name, p.name, dir, p.name, p.name, p.name, p.name });
+        , .{ p.name, dir });
     } else {
         try format(writer,
-            \\_ = @"{s}".addFileArg(asset_dir.path(b, "{s}"));
-            \\@"{s}".step.name = "{s}";
-            \\@"{s}".addFileInput(b.path("{s}"));
+            \\_ = @"{0s}".addFileArg(asset_dir.path(b, "{1s}"));
+            \\@"{0s}".step.name = "{0s}";
+            \\@"{0s}".addFileInput(b.path("{2s}"));
             \\
-        , .{ p.name, dir, p.name, p.name, p.name, config_path });
+        , .{ p.name, dir, config_path });
     }
 
     // capture stdout
     try format(writer,
-        \\const @"{s}_out" = @"{s}".captureStdOut();
+        \\const @"{0s}_out" = @"{0s}".captureStdOut();
         \\
-    , .{ p.name, p.name });
+    , .{p.name});
 
     // capture stderr and discard it
     try format(writer,
@@ -563,15 +563,15 @@ fn writeOnePackage(
     }
 
     try format(writer,
-        \\ const @"{s}_install" = b.addInstallDirectory(.{{
-        \\.source_dir = libdir.getDirectory().path(b, "{s}"),
+        \\ const @"{0s}_install" = b.addInstallDirectory(.{{
+        \\.source_dir = libdir.getDirectory().path(b, "{0s}"),
         \\.install_dir = .{{ .custom = "lib" }},
-        \\.install_subdir = "{s}",
+        \\.install_subdir = "{0s}",
         \\}});
         \\
-        \\@"{s}_install".step.dependOn(&@"{s}".step);
+        \\@"{0s}_install".step.dependOn(&@"{0s}".step);
         \\
-    , .{ p.name, p.name, p.name, p.name, p.name });
+    , .{p.name});
 
     try format(writer,
         \\b.getInstallStep().dependOn(&@"{s}_install".step);
@@ -579,9 +579,9 @@ fn writeOnePackage(
     , .{p.name});
 
     try format(writer,
-        \\b.getInstallStep().dependOn(&b.addInstallFileWithDir(@"{s}_out", .{{ .custom = "logs" }}, "{s}.log").step);
+        \\b.getInstallStep().dependOn(&b.addInstallFileWithDir(@"{0s}_out", .{{ .custom = "logs" }}, "{0s}.log").step);
         \\
-    , .{ p.name, p.name });
+    , .{p.name});
 }
 
 pub fn main() !void {
