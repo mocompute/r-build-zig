@@ -236,8 +236,10 @@ pub fn main() !void {
 
     pool.waitAndWork(&wg);
 
-    // if any hashes were updated, exit 1
-    if (hashes_updated > 0) std.process.exit(1);
+    // if any hashes were updated, write a message
+    if (hashes_updated > 0) {
+        std.debug.print("WARNING: wrote new hash for {} assets\n", .{hashes_updated});
+    }
 }
 
 fn fatal(comptime format: []const u8, args: anytype) noreturn {
