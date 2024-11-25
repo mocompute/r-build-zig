@@ -21,12 +21,10 @@
     .minimum_zig_version = "0.14.0",
     .dependencies = .{
         .mos = .{
-            .url = "https://github.com/mocompute/mos/archive/refs/tags/v0.2.0.tar.gz",
-            .hash = "12201be8c88f308ba07e8d9ed791a57043b2d2628d9e45e66c1d39d7b147042e30d5",
+            .path = "vendor/mos-0.2.0",
         },
         .@"r-repo-parse" = .{
-            .url = "https://github.com/mocompute/r-repo-parse/archive/refs/tags/v0.5.0.tar.gz",
-            .hash = "1220788c63a749e8a0ad60ab88d1dc41691e117d34397d8879da548424cbac5403af",
+            .path = "vendor/r-repo-parse-0.5.0-no-deps",
         },
     },
 
