@@ -17,7 +17,7 @@
 
 .{
     .name = "r-build-zig",
-    .version = "0.6.0-dev",
+    .version = "0.6.0",
     .minimum_zig_version = "0.14.0",
     .dependencies = .{
         .mos = .{
@@ -25,8 +25,8 @@
             .hash = "12201be8c88f308ba07e8d9ed791a57043b2d2628d9e45e66c1d39d7b147042e30d5",
         },
         .@"r-repo-parse" = .{
-            .url = "https://github.com/mocompute/r-repo-parse/archive/main.zip",
-            .hash = "12206d2b0532da4b093f7c9760f1ca90869a139ab459be959165c59675afcd210a60",
+            .url = "https://github.com/mocompute/r-repo-parse/archive/refs/tags/v0.6.0.tar.gz",
+            .hash = "1220117b0f0ec5de1bca4e5cd62ebfc5f6bfa45d4a1b6a632ddd45f6f0797b346fec",
         },
     },
 
