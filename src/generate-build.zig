@@ -21,9 +21,9 @@ const Hash = std.crypto.hash.sha2.Sha256;
 const Mutex = std.Thread.Mutex;
 
 const r_repo_parse = @import("r-repo-parse");
-const NAVC = r_repo_parse.rlang.PackageSpec;
-const NAVCHashMap = r_repo_parse.rlang.PackageSpecHashMap;
-const NAVCHashMapSortContext = r_repo_parse.rlang.PackageSpecSortContext;
+const PackageSpec = r_repo_parse.rlang.PackageSpec;
+const PackageSpecHashMap = r_repo_parse.rlang.PackageSpecHashMap;
+const PackageSpecSortContext = r_repo_parse.rlang.PackageSpecSortContext;
 const Repository = r_repo_parse.Repository;
 
 const mos = @import("mos");
@@ -191,7 +191,7 @@ fn findDirectory(alloc: Allocator, name: []const u8, roots: []const []const u8) 
 
 fn findTarball(
     alloc: Allocator,
-    package: NAVC,
+    package: PackageSpec,
     repo: Repository,
     index: Repository.Index,
 ) !?[]const u8 {
@@ -211,13 +211,13 @@ fn findTarball(
 }
 
 /// Caller owns returned slice memory.
-fn calculateDependencies(alloc: Allocator, packages: Repository, cloud: Repository) ![]NAVC {
+fn calculateDependencies(alloc: Allocator, packages: Repository, cloud: Repository) ![]PackageSpec {
     // collect external dependencies
     var deps = try getDirectDependencies(alloc, packages);
     defer deps.deinit();
 
     // sort the hash map
-    deps.sort(NAVCHashMapSortContext{ .keys = deps.keys() });
+    deps.sort(PackageSpecSortContext{ .keys = deps.keys() });
 
     // print direct dependencies
     std.debug.print("\nDirect dependencies:\n", .{});
@@ -226,7 +226,7 @@ fn calculateDependencies(alloc: Allocator, packages: Repository, cloud: Reposito
     }
 
     // collect their transitive dependencies
-    const temp_keys = try alloc.dupe(NAVC, deps.keys());
+    const temp_keys = try alloc.dupe(PackageSpec, deps.keys());
     defer alloc.free(temp_keys);
 
     for (temp_keys) |navc| {
@@ -245,7 +245,7 @@ fn calculateDependencies(alloc: Allocator, packages: Repository, cloud: Reposito
     }
 
     // sort the hash map
-    deps.sort(NAVCHashMapSortContext{ .keys = deps.keys() });
+    deps.sort(PackageSpecSortContext{ .keys = deps.keys() });
 
     // print everything out
     std.debug.print("\nTransitive dependencies:\n", .{});
@@ -264,8 +264,8 @@ fn calculateDependencies(alloc: Allocator, packages: Repository, cloud: Reposito
 }
 
 /// Caller must free returned slice.
-fn getDirectDependencies(alloc: Allocator, packages: Repository) !NAVCHashMap {
-    var deps = NAVCHashMap.init(alloc);
+fn getDirectDependencies(alloc: Allocator, packages: Repository) !PackageSpecHashMap {
+    var deps = PackageSpecHashMap.init(alloc);
 
     var it = packages.iter();
     while (it.next()) |p| {
@@ -294,7 +294,7 @@ fn getDirectDependencies(alloc: Allocator, packages: Repository) !NAVCHashMap {
 /// Requires thread-safe allocator.
 fn checkAndCreateAssets(
     alloc: Allocator,
-    packages: []NAVC,
+    packages: []PackageSpec,
     cloud: Repository,
     cloud_index: Repository.Index,
     assets_orig: Assets,
@@ -330,7 +330,7 @@ fn checkAndCreateAssets(
 
 fn checkAndAddOnePackage(
     alloc: Allocator,
-    package: NAVC,
+    package: PackageSpec,
     cloud: Repository,
     index: Repository.Index,
     assets: *Assets,
@@ -424,7 +424,7 @@ fn writeBuildRules(
     alloc: Allocator,
     out_path: []const u8,
     config_path: []const u8,
-    merged: []NAVC,
+    merged: []PackageSpec,
     packages: Repository,
     cloud: Repository,
     cloud_index: Repository.Index,
