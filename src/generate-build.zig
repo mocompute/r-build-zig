@@ -21,10 +21,10 @@ const Hash = std.crypto.hash.sha2.Sha256;
 const Mutex = std.Thread.Mutex;
 
 const r_repo_parse = @import("r-repo-parse");
-const NAVC = r_repo_parse.version.NameAndVersionConstraint;
-const NAVCHashMap = r_repo_parse.version.NameAndVersionConstraintHashMap;
-const NAVCHashMapSortContext = r_repo_parse.version.NameAndVersionConstraintSortContext;
-const Repository = r_repo_parse.repository.Repository;
+const NAVC = r_repo_parse.rlang.PackageSpec;
+const NAVCHashMap = r_repo_parse.rlang.PackageSpecHashMap;
+const NAVCHashMapSortContext = r_repo_parse.rlang.PackageSpecSortContext;
+const Repository = r_repo_parse.Repository;
 
 const mos = @import("mos");
 const download = mos.download;
@@ -254,7 +254,7 @@ fn calculateDependencies(alloc: Allocator, packages: Repository, cloud: Reposito
     }
 
     // merge version constraints
-    const merged = try r_repo_parse.version.mergeNameAndVersionConstraints(alloc, deps.keys());
+    const merged = try r_repo_parse.rlang.mergePackageSpecs(alloc, deps.keys());
     std.debug.print("\nMerged transitive dependencies:\n", .{});
     for (merged) |navc| {
         std.debug.print("    {}\n", .{navc});
