@@ -51,7 +51,7 @@ fn hashOne(
         defer file.close();
 
         // hash the file
-        var buf: [std.mem.page_size]u8 = undefined;
+        var buf: [4096]u8 = undefined;
         var hasher = Hash.init(.{});
         while (true) {
             const n = file.read(&buf) catch |err| {
