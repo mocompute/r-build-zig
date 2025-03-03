@@ -24,9 +24,9 @@
             .url = "https://github.com/mocompute/mos/archive/refs/tags/v0.2.0.tar.gz",
             .hash = "12201be8c88f308ba07e8d9ed791a57043b2d2628d9e45e66c1d39d7b147042e30d5",
         },
-        .@"r-repo-parse" = .{
-            .url = "https://github.com/mocompute/r-repo-parse/archive/refs/tags/v0.6.0.tar.gz",
-            .hash = "1220117b0f0ec5de1bca4e5cd62ebfc5f6bfa45d4a1b6a632ddd45f6f0797b346fec",
+        .r_repo_parse = .{
+            .url = "https://github.com/mocompute/r-repo-parse/archive/refs/tags/v0.7.0.tar.gz",
+            .hash = "1220f6d5f2d5a13cf21dc5bf5262e998492ae7dd59d845e8710e029126c5ac85cc90",
         },
     },
 

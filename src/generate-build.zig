@@ -20,7 +20,7 @@ const Allocator = std.mem.Allocator;
 const Hash = std.crypto.hash.sha2.Sha256;
 const Mutex = std.Thread.Mutex;
 
-const r_repo_parse = @import("r-repo-parse");
+const r_repo_parse = @import("r_repo_parse");
 const PackageSpec = r_repo_parse.rlang.PackageSpec;
 const PackageSpecHashMap = r_repo_parse.rlang.PackageSpecHashMap;
 const PackageSpecSortContext = r_repo_parse.rlang.PackageSpecSortContext;

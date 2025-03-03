@@ -34,7 +34,7 @@ fn build_fetch_assets(b: *Build, target: ResolvedTarget, optimize: OptimizeMode,
     });
 
     exe.root_module.addImport("mos", depends.get("mos").?);
-    exe.root_module.addImport("r-repo-parse", depends.get("r-repo-parse").?);
+    exe.root_module.addImport("r_repo_parse", depends.get("r_repo_parse").?);
     return exe;
 }
 
@@ -47,7 +47,7 @@ fn build_generate_build(b: *Build, target: ResolvedTarget, optimize: OptimizeMod
     });
 
     exe.root_module.addImport("mos", depends.get("mos").?);
-    exe.root_module.addImport("r-repo-parse", depends.get("r-repo-parse").?);
+    exe.root_module.addImport("r_repo_parse", depends.get("r_repo_parse").?);
     return exe;
 }
 
@@ -68,10 +68,10 @@ pub fn build(b: *Build) !void {
         .target = target,
         .optimize = optimize,
     }).module("mos"));
-    try depends.put("r-repo-parse", b.dependency("r-repo-parse", .{
+    try depends.put("r_repo_parse", b.dependency("r_repo_parse", .{
         .target = target,
         .optimize = optimize,
-    }).module("r-repo-parse"));
+    }).module("r_repo_parse"));
     // -- end dependencies ---------------------------------------------------
 
     // -- begin tools --------------------------------------------------------
@@ -91,7 +91,7 @@ pub fn build(b: *Build) !void {
         .optimize = optimize,
     });
     test_fetch_assets.root_module.addImport("mos", depends.get("mos").?);
-    test_fetch_assets.root_module.addImport("r-repo-parse", depends.get("r-repo-parse").?);
+    test_fetch_assets.root_module.addImport("r_repo_parse", depends.get("r_repo_parse").?);
     const run_test_fetch_assets = b.addRunArtifact(test_fetch_assets);
 
     const test_generate_build = b.addTest(.{
@@ -100,7 +100,7 @@ pub fn build(b: *Build) !void {
         .optimize = optimize,
     });
     test_generate_build.root_module.addImport("mos", depends.get("mos").?);
-    test_generate_build.root_module.addImport("r-repo-parse", depends.get("r-repo-parse").?);
+    test_generate_build.root_module.addImport("r_repo_parse", depends.get("r_repo_parse").?);
     const run_test_generate_build = b.addRunArtifact(test_generate_build);
 
     test_step.dependOn(&run_test_fetch_assets.step);
