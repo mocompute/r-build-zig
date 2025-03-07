@@ -18,16 +18,16 @@
 .{
     .name = .r_build_zig,
     .fingerprint = 0xb3b87030def0c2e6,
-    .version = "0.7.0",
+    .version = "0.8.0",
     .minimum_zig_version = "0.14.0",
     .dependencies = .{
         .mos = .{
-            .url = "https://github.com/mocompute/mos/archive/refs/tags/v0.2.0.tar.gz",
-            .hash = "mos-0.2.0-AAAAAMWxAAAb6MiPMIugfo2e15GlcEOy0mKNnkXmbB05",
+            .url = "https://github.com/mocompute/mos/archive/refs/tags/v0.4.0.tar.gz",
+            .hash = "mos-0.4.0-Ciufim_JAADcaJ3uhu6kYWudMtEoepIHqL5AYOghpAiP",
         },
         .r_repo_parse = .{
-            .url = "https://github.com/mocompute/r-repo-parse/archive/refs/tags/v0.7.0.tar.gz",
-            .hash = "r_repo_parse-0.7.0-pra--dsVAgDC6UZLtaCnMs-YQl6H89-Ua9aimlYL0zhq",
+            .url = "https://github.com/mocompute/r-repo-parse/archive/refs/tags/v0.8.0.tar.gz",
+            .hash = "r_repo_parse-0.8.0-pra--dsVAgAgW6UPbzGiEG0-1x1bx3SpK8z6vTeU5wmH",
         },
     },
 
